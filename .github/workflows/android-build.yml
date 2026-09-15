@@ -1,0 +1,113 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: چک‌اوت کد
+        uses: actions/checkout@v4
+
+      - name: نصب Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: نصب پکیج‌های npm (Capacitor core/cli/android/clipboard)
+        run: npm install
+
+      - name: نصب JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: ساخت پروژه اندروید از صفر (android/ عمداً کامیت نمی‌شود)
+        run: npx cap add android
+
+      - name: فعال کردن پشتیبانی Kotlin در پروژه اندروید
+        run: |
+          python3 - <<'PYEOF'
+          import re, sys
+
+          KOTLIN_VERSION = "2.1.20"
+
+          # --- ۱) افزودن classpath پلاگین Kotlin به build.gradle ریشه ---
+          root = "android/build.gradle"
+          s = open(root, encoding="utf-8").read()
+          if "kotlin-gradle-plugin" in s:
+              print("classpath کاتلین از قبل وجود دارد")
+          else:
+              m = re.search(r"^(\s*)classpath .*com\.android\.tools\.build:gradle.*$", s, re.M)
+              if not m:
+                  print("خطا: خط classpath اندروید در android/build.gradle پیدا نشد")
+                  print(s)
+                  sys.exit(1)
+              indent = m.group(1)
+              line = f"{indent}classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:{KOTLIN_VERSION}'"
+              s = s[:m.start()] + line + "\n" + s[m.start():]
+              open(root, "w", encoding="utf-8").write(s)
+              print("classpath کاتلین اضافه شد")
+
+          # --- ۲) فعال کردن پلاگین Kotlin در ماژول app ---
+          app = "android/app/build.gradle"
+          s = open(app, encoding="utf-8").read()
+          if "kotlin.android" in s or "kotlin-android" in s:
+              print("پلاگین کاتلین از قبل فعال است")
+          else:
+              m = re.search(r"^apply plugin: ['\"]com\.android\.application['\"].*$", s, re.M)
+              if not m:
+                  print("خطا: خط apply plugin اندروید در android/app/build.gradle پیدا نشد")
+                  print(s)
+                  sys.exit(1)
+              s = s[:m.end()] + "\napply plugin: 'org.jetbrains.kotlin.android'" + s[m.end():]
+              # هماهنگ کردن هدف JVM کاتلین با جاوا ۲۱
+              s += "\n\nandroid {\n    kotlinOptions {\n        jvmTarget = '21'\n    }\n}\n"
+              open(app, "w", encoding="utf-8").write(s)
+              print("پلاگین کاتلین فعال شد")
+          PYEOF
+          echo "--- android/build.gradle ---"
+          cat android/build.gradle
+          echo "--- android/app/build.gradle ---"
+          cat android/app/build.gradle
+
+      - name: کپی پلاگین سفارشی حباب شناور داخل پروژه اندروید
+        run: |
+          PKG_PATH=$(node -p "require('./capacitor.config.json').appId.replace(/\./g, '/')")
+          DEST="android/app/src/main/java/$PKG_PATH"
+          echo "کپی به $DEST"
+          # حذف MainActivity.java پیش‌فرض تا با نسخه‌ی Kotlin تداخل نکند
+          rm -f "$DEST/MainActivity.java"
+          cp android-plugin/OverlayPlugin.kt "$DEST/OverlayPlugin.kt"
+          cp android-plugin/OverlayService.kt "$DEST/OverlayService.kt"
+          cp android-plugin/MainActivity.kt "$DEST/MainActivity.kt"
+          echo "--- محتوای پوشه‌ی سورس ---"
+          ls -la "$DEST"
+
+      - name: افزودن مجوزها و سرویس به AndroidManifest.xml
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />#' "$MANIFEST"
+          sed -i 's#</application>#    <service android:name=".OverlayService" android:enabled="true" android:exported="false" android:foregroundServiceType="specialUse"><property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="clipboard_capture_tool" /></service>\n    </application>#' "$MANIFEST"
+          echo "--- محتوای نهایی AndroidManifest.xml ---"
+          cat "$MANIFEST"
+
+      - name: sync کردن Capacitor (کپی www به اندروید)
+        run: npx cap sync android
+
+      - name: مجوز اجرا به gradlew
+        run: chmod +x android/gradlew
+
+      - name: ساخت APK دیباگ
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: آپلود APK به‌عنوان Artifact قابل‌دانلود
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

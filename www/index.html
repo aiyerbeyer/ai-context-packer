@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b0f19">
+    <title>ابزار بسته‌بندی کانتکست AI</title>
+    <style>
+        :root {
+            --bg-body: #0b0f19;
+            --bg-card: #151c2c;
+            --bg-input: #1a2336;
+            --border-color: #2a364f;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 16px;
+            max-width: 680px;
+            margin: 0 auto;
+            line-height: 1.6;
+            padding-bottom: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 { font-size: 1.2rem; color: var(--text-main); }
+        .header p { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            background: var(--bg-card);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .tab-btn.active { background: var(--primary); color: #fff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        label { font-size: 0.85rem; font-weight: 600; color: #cbd5e1; }
+
+        .paste-btn {
+            background: #27354f;
+            color: #38bdf8;
+            border: 1px solid #3b82f640;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .paste-btn:active { background: #32456a; }
+
+        textarea {
+            width: 100%;
+            min-height: 90px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            resize: vertical;
+            direction: auto;
+        }
+
+        textarea:focus { outline: none; border-color: var(--primary); }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        button.action-btn {
+            appearance: none;
+            border: none;
+            border-radius: 8px;
+            padding: 11px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        button.action-btn:active { filter: brightness(0.9); }
+
+        .btn-primary { background-color: var(--primary); color: #fff; }
+        .btn-secondary { background-color: #27354f; color: #e2e8f0; }
+        .btn-success { background-color: var(--success); color: #fff; }
+        .btn-warning { background-color: var(--warning); color: #000; }
+        .btn-danger { background-color: var(--danger); color: #fff; width: 100%; margin-top: 8px; }
+
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background-color: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        select {
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .turn-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .turn-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 12px;
+        }
+
+        .turn-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .turn-header .del-btn {
+            color: var(--danger);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 2px 6px;
+        }
+
+        .turn-field {
+            background-color: var(--bg-input);
+            padding: 8px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 0.83rem;
+            margin-bottom: 6px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding: 20px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: #1e293b;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 20px;
+            border: 1px solid var(--primary);
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+            pointer-events: none;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>⚡ ابزار بسته‌بندی کانتکست AI</h1>
+        <p>استخراج و ساخت یکباره پرامپت مکالمات</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('single')">✏️ ورود تکی</button>
+        <button class="tab-btn" onclick="switchTab('bulk')">📦 ورود گروهی (کلیپ‌برد)</button>
+        <button class="tab-btn" onclick="switchTab('capture')">🫧 حباب شناور</button>
+    </div>
+
+    <!-- ورود تکی -->
+    <div id="tab-single" class="tab-content active">
+        <div class="card">
+            <div class="input-group">
+                <div class="input-header">
+                    <label for="promptInput">👤 سوال (User):</label>
+                    <button class="paste-btn" onclick="pasteClipboard('promptInput')">📋 چسباندن</button>
+                </div>
+                <textarea id="promptInput" placeholder="متن سوال..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <div class="input-header">
+                    <label for="responseInput">🤖 پاسخ (Assistant):</label>
+                    <button class="paste-btn" onclick="pasteClipboard('responseInput')">📋 چسباندن</button>
+                </div>
+                <textarea id="responseInput" placeholder="پاسخ هوش مصنوعی..."></textarea>
+            </div>
+
+            <div class="btn-grid">
+                <button class="action-btn btn-primary" onclick="addTurn()">➕ ثبت مرحله</button>
+                <button class="action-btn btn-secondary" onclick="clearInputs()">🧹 پاک کردن</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ورود گروهی -->
+    <div id="tab-bulk" class="tab-content">
+        <div class="card">
+            <div class="input-header" style="margin-bottom:6px;">
+                <label for="bulkInput">📦 چسباندن یکجای مکالمات:</label>
+                <button class="paste-btn" onclick="pasteClipboard('bulkInput')">📋 چسباندن</button>
+            </div>
+            <textarea id="bulkInput" style="min-height: 140px;" placeholder="سوال ۱&#10;&#10;پاسخ ۱&#10;&#10;سوال ۲&#10;&#10;پاسخ ۲..."></textarea>
+
+            <div style="margin: 10px 0;">
+                <label style="font-size: 0.8rem;">نحوه تفکیک متن:</label>
+                <select id="splitMode" style="width: 100%; margin-top: 4px;">
+                    <option value="double_line">یکی در میان با خط خالی (Enter دو تایی)</option>
+                    <option value="single_line">یکی در میان خط به خط</option>
+                    <option value="dash">جداکننده سه خط (---)</option>
+                </select>
+            </div>
+
+            <button class="action-btn btn-warning" style="width:100%;" onclick="processBulk()">⚡ استخراج گروهی</button>
+        </div>
+    </div>
+
+    <!-- ضبط خودکار با حباب شناور (فقط داخل APK کار می‌کند، نه در مرورگر) -->
+    <div id="tab-capture" class="tab-content">
+        <div class="card">
+            <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px; line-height:1.8;">
+                این حالت فقط داخل نسخه‌ی APK کار می‌کند. با «شروع ضبط»، یک نوار کوچک شناور روی صفحه ظاهر می‌شود
+                با دو دکمه: <b>👤 برای سوال</b> و <b>🤖 برای پاسخ</b>. هر متنی را که کپی کردید، روی دکمه‌ی
+                مقصدش بزنید — همین. اگر پاسخ چندتکه بود، برای هر تکه دوباره 🤖 را بزنید، همه به‌هم می‌چسبند.
+                وقتی پاسخ ثبت شده و دوباره 👤 را بزنید، یعنی سوال بعدی شروع شده و ترن قبلی <b>خودکار</b>
+                ذخیره می‌شود — دیگر نیازی به سوییچ دستی یا باز کردن اپ نیست. دکمه‌ی <b>⋯</b> هم «لغو» و
+                «پایان» را نشان می‌دهد (پایان از داخل نوتیفیکیشن هم در دسترس است).
+            </p>
+
+            <div class="controls-row">
+                <div>وضعیت: <span id="captureStatus" class="badge">غیرفعال</span></div>
+            </div>
+
+            <div style="font-size:0.75rem; color:var(--text-muted); margin:10px 0 4px;">👤 سوال جاری</div>
+            <div class="turn-field" id="capturePromptPreview">(هنوز سوالی ثبت نشده)</div>
+
+            <div style="font-size:0.75rem; color:var(--text-muted); margin:10px 0 4px;">🤖 پاسخ جاری</div>
+            <div class="turn-field" id="captureResponsePreview">(هنوز پاسخی ثبت نشده)</div>
+
+            <button id="captureToggleBtn" class="action-btn btn-primary" style="width:100%; margin-top:10px;" onclick="toggleCapture()">🟢 شروع ضبط با حباب شناور</button>
+
+            <button class="action-btn btn-warning" style="width:100%;" onclick="undoLastPaste()">↩️ لغو آخرین تکه</button>
+        </div>
+    </div>
+
+    <!-- بخش خروجی -->
+    <div class="card">
+        <div class="controls-row">
+            <div>تعداد: <span id="turnCount" class="badge">0</span></div>
+            <div>
+                <select id="formatSelect" onchange="saveFormat()">
+                    <option value="xml">فرمت XML (پیشنهادی)</option>
+                    <option value="md">فرمت Markdown</option>
+                    <option value="json">فرمت JSON</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="btn-grid">
+            <button class="action-btn btn-success" onclick="copyResult()">📋 کپی خروجی</button>
+            <button class="action-btn btn-secondary" onclick="downloadResult()">📥 دانلود فایل</button>
+        </div>
+
+        <button class="action-btn btn-danger" onclick="clearAll()">🗑 پاک کردن همه</button>
+    </div>
+
+    <div id="turnList" class="turn-list"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        let turns = [];
+        const STORAGE_KEY = 'ai_turns';
+        const FORMAT_KEY = 'ai_fmt';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadState();
+            render();
+            if (isOverlayAvailable()) {
+                Capacitor.Plugins.OverlayCapture.addListener('clipboardCaptured', handleClipboardCaptured);
+                Capacitor.Plugins.OverlayCapture.addListener('undoRequested', undoLastPaste);
+                Capacitor.Plugins.OverlayCapture.addListener('finishRequested', function() {
+                    if (capturing) finishCapture();
+                });
+            }
+            updateCaptureStatusUI();
+        });
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) turns = parsed;
+                }
+                const savedFmt = localStorage.getItem(FORMAT_KEY);
+                if (savedFmt) document.getElementById('formatSelect').value = savedFmt;
+            } catch (e) {
+                console.warn('بازیابی داده‌های ذخیره‌شده ناموفق بود:', e);
+            }
+        }
+
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const order = ['single', 'bulk', 'capture'];
+            const idx = order.indexOf(type) >= 0 ? order.indexOf(type) : 0;
+            document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+            document.getElementById('tab-' + order[idx]).classList.add('active');
+        }
+
+        // ==================================================================
+        // حالت ضبط خودکار با حباب شناور (فقط داخل APK با پلاگین OverlayCapture)
+        // دیگر «فاز» نداریم: هر متن مستقیم روی دکمه‌ی مقصدش (👤 یا 🤖) ثبت می‌شود.
+        // ==================================================================
+        let capturing = false;
+        let currentIndex = 1;
+        let promptChunks = [];
+        let responseChunks = [];
+        let lastRead = { prompt: null, response: null };
+        let lastTarget = null;
+
+        function isOverlayAvailable() {
+            return !!(window.Capacitor && window.Capacitor.isPluginAvailable && window.Capacitor.isPluginAvailable('OverlayCapture'));
+        }
+
+        /** پیام هم داخل اپ و هم به‌صورت نیتیو (تا وقتی اپ در پس‌زمینه است هم دیده شود) */
+        function notify(msg) {
+            toast(msg);
+            if (isOverlayAvailable() && capturing) {
+                try { Capacitor.Plugins.OverlayCapture.showToast({ text: msg }); } catch (e) {}
+            }
+        }
+
+        async function checkOverlayPermission() {
+            if (!isOverlayAvailable()) {
+                toast('⚠️ این قابلیت فقط داخل APK ساخته‌شده کار می‌کند');
+                return false;
+            }
+            const { granted } = await Capacitor.Plugins.OverlayCapture.hasOverlayPermission();
+            if (!granted) {
+                toast('🔐 مجوز نمایش روی سایر برنامه‌ها لازم است؛ تنظیمات باز می‌شود، بعد دوباره برگردید و بزنید');
+                await Capacitor.Plugins.OverlayCapture.requestOverlayPermission();
+                return false;
+            }
+            return true;
+        }
+
+        async function toggleCapture() {
+            if (capturing) {
+                finishCapture();
+                return;
+            }
+            const ok = await checkOverlayPermission();
+            if (!ok) return;
+
+            currentIndex = 1;
+            promptChunks = [];
+            responseChunks = [];
+            lastRead = { prompt: null, response: null };
+            lastTarget = null;
+
+            await Capacitor.Plugins.OverlayCapture.startCapture();
+            capturing = true;
+            updateCaptureStatusUI();
+            updateBubbleLabel();
+            toast('🟢 ضبط شروع شد؛ متن را کپی کن و روی 👤 یا 🤖 بزن');
+        }
+
+        function handleClipboardCaptured(data) {
+            if (!capturing) return;
+            const text = ((data && data.text) || '').trim();
+            const target = (data && data.target) === 'response' ? 'response' : 'prompt';
+            const label = target === 'prompt' ? 'سوال' : 'پاسخ';
+
+            if (!text) { notify('⚠️ کلیپ‌برد خالی است'); return; }
+            if (text === lastRead[target]) {
+                notify('⏳ همینو قبلاً در ' + label + ' ثبت کردی');
+                return;
+            }
+
+            // اگر پاسخِ ترن جاری ثبت شده و حالا روی «سوال» می‌زنی،
+            // یعنی ترن قبلی تمام شده و سوال بعدی شروع می‌شود — خودکار.
+            if (target === 'prompt' && responseChunks.length > 0) {
+                commitTurn();
+            }
+
+            lastRead[target] = text;
+            lastTarget = target;
+            if (target === 'prompt') promptChunks.push(text); else responseChunks.push(text);
+
+            const n = target === 'prompt' ? promptChunks.length : responseChunks.length;
+            updateCaptureStatusUI();
+            updateBubbleLabel();
+            notify('✅ ' + label + ' ' + currentIndex + ' — تکه‌ی ' + n + ' ثبت شد');
+        }
+
+        /** ترن جاری را در لیست نهایی ذخیره می‌کند و شمارنده را جلو می‌برد */
+        function commitTurn() {
+            turns.push({
+                prompt: promptChunks.join('\n\n'),
+                response: responseChunks.join('\n\n')
+            });
+            save();
+            promptChunks = [];
+            responseChunks = [];
+            lastRead = { prompt: null, response: null };
+            lastTarget = null;
+            currentIndex++;
+        }
+
+        function undoLastPaste() {
+            if (!lastTarget) { notify('چیزی برای لغو نیست'); return; }
+            const arr = lastTarget === 'prompt' ? promptChunks : responseChunks;
+            if (!arr.length) { notify('چیزی برای لغو نیست'); return; }
+            arr.pop();
+            lastRead[lastTarget] = null; // اگه همون متن دوباره کپی شد، قابل ثبت باشه
+            const label = lastTarget === 'prompt' ? 'سوال' : 'پاسخ';
+            if (!arr.length) lastTarget = null;
+            updateCaptureStatusUI();
+            updateBubbleLabel();
+            notify('↩️ آخرین تکه‌ی ' + label + ' لغو شد');
+        }
+
+        function updateBubbleLabel() {
+            if (!isOverlayAvailable()) return;
+            const dot = n => (n > 0 ? ' ●' + n : '');
+            Capacitor.Plugins.OverlayCapture.updateLabels({
+                prompt: '👤 ' + currentIndex + dot(promptChunks.length),
+                response: '🤖 ' + currentIndex + dot(responseChunks.length)
+            });
+        }
+
+        function updateCaptureStatusUI() {
+            const statusEl = document.getElementById('captureStatus');
+            const promptEl = document.getElementById('capturePromptPreview');
+            const responseEl = document.getElementById('captureResponsePreview');
+            const toggleBtn = document.getElementById('captureToggleBtn');
+            if (!statusEl || !promptEl || !responseEl || !toggleBtn) return;
+            statusEl.innerText = capturing ? ('در حال ضبط — ترن ' + currentIndex) : 'غیرفعال';
+            promptEl.innerText = promptChunks.join('\n\n') || '(هنوز سوالی ثبت نشده)';
+            responseEl.innerText = responseChunks.join('\n\n') || '(هنوز پاسخی ثبت نشده)';
+            toggleBtn.innerText = capturing ? '🔴 پایان و دریافت خروجی' : '🟢 شروع ضبط با حباب شناور';
+        }
+
+        function finishCapture() {
+            if (promptChunks.length || responseChunks.length) {
+                commitTurn();
+            }
+            if (isOverlayAvailable()) {
+                Capacitor.Plugins.OverlayCapture.stopCapture();
+            }
+            capturing = false;
+            promptChunks = [];
+            responseChunks = [];
+            lastRead = { prompt: null, response: null };
+            lastTarget = null;
+            updateCaptureStatusUI();
+            switchTab('single');
+            toast('🏁 ضبط تمام شد؛ خروجی پایین آماده‌ی کپی یا دانلوده');
+        }
+
+        async function pasteClipboard(targetId) {
+            const el = document.getElementById(targetId);
+
+            // روش اول: پلاگین نیتیو Capacitor (وقتی به‌صورت APK اجرا می‌شود)
+            try {
+                if (window.Capacitor && window.Capacitor.isPluginAvailable('Clipboard')) {
+                    const { value } = await window.Capacitor.Plugins.Clipboard.read();
+                    if (value) {
+                        insertText(el, value);
+                        toast('📋 چسبانده شد');
+                        return;
+                    }
+                    toast('⚠️ کلیپ‌برد خالی است');
+                    return;
+                }
+            } catch (e) {
+                console.warn('Capacitor Clipboard read failed:', e);
+                // اگر پلاگین نصب نبود یا خطا داد، به روش وب می‌رویم
+            }
+
+            // روش دوم: Clipboard API استاندارد (نیاز به HTTPS و اجازه کاربر دارد)
+            try {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText();
+                    if (text) {
+                        insertText(el, text);
+                        toast('📋 چسبانده شد');
+                        return;
+                    }
+                    toast('⚠️ کلیپ‌برد خالی است');
+                    return;
+                }
+            } catch (err) {
+                // اگر کاربر اجازه نداد یا پشتیبانی نشد، به روش دستی می‌رویم
+            }
+
+            // روش سوم (پشتیبان): تمرکز روی باکس تا کاربر خودش Paste بزند
+            el.focus();
+            try {
+                el.setSelectionRange(el.value.length, el.value.length);
+            } catch (e) {}
+            toast('📌 مرورگر اجازه خودکار نداد؛ حالا دستی Paste بزنید');
+        }
+
+        function insertText(el, text) {
+            el.value = el.value ? el.value + '\n' + text : text;
+        }
+
+        function addTurn() {
+            const p = document.getElementById('promptInput').value.trim();
+            const r = document.getElementById('responseInput').value.trim();
+
+            if (!p && !r) {
+                toast('⚠️ حداقل یک باکس را پر کنید');
+                return;
+            }
+
+            turns.push({ prompt: p, response: r });
+            document.getElementById('promptInput').value = '';
+            document.getElementById('responseInput').value = '';
+            save();
+            toast('✅ ثبت شد');
+        }
+
+        function processBulk() {
+            const raw = document.getElementById('bulkInput').value.trim();
+            if (!raw) {
+                toast('⚠️ متنی وارد نشده است');
+                return;
+            }
+
+            const mode = document.getElementById('splitMode').value;
+            let parts = [];
+
+            if (mode === 'double_line') {
+                parts = raw.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+            } else if (mode === 'single_line') {
+                parts = raw.split('\n').map(s => s.trim()).filter(Boolean);
+            } else if (mode === 'dash') {
+                parts = raw.split('---').map(s => s.trim()).filter(Boolean);
+            }
+
+            if (parts.length === 0) {
+                toast('⚠️ چیزی برای استخراج پیدا نشد');
+                return;
+            }
+
+            let added = 0;
+            for (let i = 0; i < parts.length; i += 2) {
+                turns.push({
+                    prompt: parts[i] || '',
+                    response: parts[i + 1] || ''
+                });
+                added++;
+            }
+
+            document.getElementById('bulkInput').value = '';
+            save();
+            switchTab('single');
+            toast('⚡ ' + added + ' مرحله اضافه شد');
+        }
+
+        function clearInputs() {
+            document.getElementById('promptInput').value = '';
+            document.getElementById('responseInput').value = '';
+        }
+
+        function deleteTurn(idx) {
+            turns.splice(idx, 1);
+            save();
+            toast('🗑 مرحله حذف شد');
+        }
+
+        function clearAll() {
+            if (turns.length === 0) return;
+            if (confirm('کل مراحل حذف شوند؟')) {
+                turns = [];
+                save();
+                toast('🗑 همه مراحل پاک شدند');
+            }
+        }
+
+        function saveFormat() {
+            localStorage.setItem(FORMAT_KEY, document.getElementById('formatSelect').value);
+        }
+
+        function save() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(turns));
+            } catch (e) {
+                toast('⚠️ ذخیره‌سازی محلی ناموفق بود');
+            }
+            render();
+        }
+
+        function render() {
+            const container = document.getElementById('turnList');
+            document.getElementById('turnCount').innerText = turns.length;
+
+            if (turns.length === 0) {
+                container.innerHTML = '<div class="empty-state">هیچ مرحله‌ای ثبت نشده است.</div>';
+                return;
+            }
+
+            const html = turns.map((t, i) => {
+                let inner = '<div class="turn-header"><span>مرحله ' + (i + 1) + '</span>' +
+                    '<button class="del-btn" onclick="deleteTurn(' + i + ')" aria-label="حذف مرحله ' + (i + 1) + '">حذف</button></div>';
+                if (t.prompt) inner += '<div class="turn-field"><b>سوال:</b> ' + escapeHtml(t.prompt) + '</div>';
+                if (t.response) inner += '<div class="turn-field"><b>پاسخ:</b> ' + escapeHtml(t.response) + '</div>';
+                return '<div class="turn-card">' + inner + '</div>';
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function getOutput() {
+            const fmt = document.getElementById('formatSelect').value;
+            if (turns.length === 0) return null;
+
+            if (fmt === 'xml') {
+                let out = '<conversation_context>\n';
+                turns.forEach((t, i) => {
+                    out += '  <turn index="' + (i + 1) + '">\n';
+                    if (t.prompt) out += '    <user_query>\n' + t.prompt + '\n    </user_query>\n';
+                    if (t.response) out += '    <ai_response>\n' + t.response + '\n    </ai_response>\n';
+                    out += '  </turn>\n';
+                });
+                out += '</conversation_context>';
+                return { text: out, ext: 'xml', mime: 'text/xml' };
+            } else if (fmt === 'md') {
+                let out = '# تاریخچه مکالمه\n\n';
+                turns.forEach((t, i) => {
+                    out += '### User (Turn ' + (i + 1) + '):\n' + (t.prompt || '-') + '\n\n';
+                    out += '### Assistant (Turn ' + (i + 1) + '):\n' + (t.response || '-') + '\n\n---\n\n';
+                });
+                return { text: out, ext: 'md', mime: 'text/markdown' };
+            } else {
+                return { text: JSON.stringify(turns, null, 2), ext: 'json', mime: 'application/json' };
+            }
+        }
+
+        async function copyResult() {
+            const res = getOutput();
+            if (!res) return toast('⚠️ داده‌ای برای کپی وجود ندارد');
+
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(res.text);
+                    toast('📋 کپی شد');
+                    return;
+                }
+                throw new Error('Clipboard API not available');
+            } catch (err) {
+                // پشتیبان: استفاده از یک تکست‌ایریای موقت و execCommand
+                try {
+                    const ta = document.createElement('textarea');
+                    ta.value = res.text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.focus();
+                    ta.select();
+                    const ok = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    toast(ok ? '📋 کپی شد' : '❌ خطا در کپی');
+                } catch (e2) {
+                    toast('❌ خطا در کپی، از دکمه دانلود استفاده کنید');
+                }
+            }
+        }
+
+        function downloadResult() {
+            const res = getOutput();
+            if (!res) return toast('⚠️ داده‌ای برای دانلود وجود ندارد');
+            const blob = new Blob([res.text], { type: res.mime + ';charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ai_context.' + res.ext;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast('📥 فایل دانلود شد');
+        }
+
+        let toastTimer = null;
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+    </script>
+</body>
+</html>
